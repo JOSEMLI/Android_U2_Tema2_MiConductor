@@ -1,10 +1,13 @@
 package com.example.android_u2_tema2_miconductor;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -12,8 +15,20 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import io.socket.client.Socket;
+import io.socket.emitter.Emitter;
 
 public class MainActivity  extends AppCompatActivity implements OnMapReadyCallback {
+
+  Socket mSocket;
+  Double latcli;
+  Double loncli;
+  String idcli;
   LatLng pos;
   GoogleMap mapa;
   @Override
@@ -23,6 +38,10 @@ public class MainActivity  extends AppCompatActivity implements OnMapReadyCallba
     SupportMapFragment mapFragment = (SupportMapFragment)
         getSupportFragmentManager().findFragmentById(R.id.mapa);
     mapFragment.getMapAsync(this);
+    mSocket = App.getSocket();
+    mSocket.on("solicitudtaxi", solicitudtaxi);
+    mSocket.connect();
+
   }
   @Override
   public void onMapReady(GoogleMap googleMap) {
@@ -37,6 +56,44 @@ public class MainActivity  extends AppCompatActivity implements OnMapReadyCallba
       mapa.getUiSettings().setCompassEnabled(true);
     }
   }
-  public void pedir(View view) {
-  }
+
+
+  private Emitter.Listener solicitudtaxi = new Emitter.Listener() {
+    @Override
+    public void call(Object... args) {
+// Se crea un JSONObjet
+      JSONObject paramsRequest = (JSONObject) args[0];
+      try {
+        latcli = paramsRequest.getDouble("latitude");
+        loncli = paramsRequest.getDouble("longitude");
+        idcli = paramsRequest.getString("socket");
+        runOnUiThread(new Runnable() {
+          @Override
+          public void run() {
+            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setMessage("Nueva solicitud de servicio desea aceptar")
+                .setTitle("SOLICITUD DE SERVICIO")
+                .setCancelable(true)
+                .setNeutralButton("Aceptar",
+                    new DialogInterface.OnClickListener() {
+                      public void onClick(DialogInterface dialog, int id) {
+                        mapa.addMarker(new MarkerOptions().position(new LatLng(latcli,loncli)).title("Ubicacion Cliente"));
+                      }
+                    })
+                .setNegativeButton("Rechazar", new DialogInterface.OnClickListener() {
+                  @Override
+                  public void onClick(DialogInterface dialogInterface, int i) {
+                    dialogInterface.cancel();
+                  }
+                });
+            AlertDialog alert = builder.create();
+            alert.show();
+          }
+        });
+      } catch (JSONException e) {
+        Log.e("JSONException", e.toString());
+      }
+    }
+  };
+
 }

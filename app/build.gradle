@@ -2,6 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 29
+    useLibrary 'org.apache.http.legacy'
     buildToolsVersion "29.0.2"
     defaultConfig {
         applicationId "com.example.android_u2_tema2_miconductor"
@@ -28,5 +29,11 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
     implementation 'com.google.android.gms:play-services-maps:16.0.0'
+
+    implementation ('io.socket:socket.io-client:0.9.0') {
+// excluding org.json which is provided by Android
+        exclude group: 'org.json', module: 'json'
+    }
+
 
 }
