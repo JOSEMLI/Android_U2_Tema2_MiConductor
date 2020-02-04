@@ -5,7 +5,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -78,6 +80,14 @@ public class MainActivity  extends AppCompatActivity implements OnMapReadyCallba
                     new DialogInterface.OnClickListener() {
                       public void onClick(DialogInterface dialog, int id) {
                         mapa.addMarker(new MarkerOptions().position(new LatLng(latcli,loncli)).title("Ubicacion Cliente"));
+                        //se agrego cuando acepta
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                          startForegroundService(new Intent(MainActivity.this, ServicioLocalizacion.class));
+                        } else {
+                          startService(new Intent(MainActivity.this,
+                              ServicioLocalizacion.class));
+                        }
+
                       }
                     })
                 .setNegativeButton("Rechazar", new DialogInterface.OnClickListener() {
