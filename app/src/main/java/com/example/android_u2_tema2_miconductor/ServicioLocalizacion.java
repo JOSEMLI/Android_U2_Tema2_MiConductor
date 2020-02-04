@@ -19,6 +19,12 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import io.socket.client.Ack;
+import io.socket.client.Socket;
+
 public class ServicioLocalizacion extends Service {
   public static final String NOTIFICATION_CHANNEL_ID = "1000";
   public static final String NOTIFICATION_CHANNEL_NAME = "localizacion";
@@ -26,11 +32,19 @@ public class ServicioLocalizacion extends Service {
   private double wayLatitude = 0.0, wayLongitude = 0.0;
   private LocationRequest locationRequest;
   private LocationCallback locationCallback;
+
+
+//desde aqui
+  private Socket mSocket;
   @Override public void onCreate() {
+    mSocket = App.getSocket();
+    if(!mSocket.connected())
+      mSocket.connect();
+    //hasta aqui se modifico
     mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
     locationRequest = LocationRequest.create();
     locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-    locationRequest.setInterval(10 * 1000); // 10 seconds
+    locationRequest.setInterval(10 * 1000); // 10 seconds es el intervalo de actualizacion
     locationRequest.setFastestInterval(5 * 1000); // 5 seconds
     locationCallback = new LocationCallback() {
       @Override
@@ -39,10 +53,27 @@ public class ServicioLocalizacion extends Service {
           return;
         }
         for (Location location : locationResult.getLocations()) {
+          //se modifico desde aqui
           if (location != null) {
             wayLatitude = location.getLatitude();
             wayLongitude = location.getLongitude();
             Log.i("milocalizacion","lat:"+wayLatitude+" lon:"+wayLongitude);
+            JSONObject misdatos = new JSONObject();
+            try {
+              misdatos.put("lat",wayLatitude);
+              misdatos.put("lon",wayLongitude);
+              misdatos.put("id",App.getidcliente());
+            } catch (JSONException e) {
+              Log.e("JSONExceptionPresenter", e.toString());
+            }
+            mSocket.emit("taxilocation", misdatos, new Ack() {
+              @Override
+              public void call(Object... args) {
+                String res = (String) args[0];
+                if (res.equals("OK")) Log.i("mimensaje", "Se envio correctamente");
+                else Log.i("mimensaje", "Hubo error en el envio");
+              }
+            });
           }
         }
       }
@@ -74,5 +105,10 @@ public class ServicioLocalizacion extends Service {
   }
   @Override public IBinder onBind(Intent intencion) {
     return null;
+  }
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+    mFusedLocationClient.removeLocationUpdates(locationCallback);
   }
 }
