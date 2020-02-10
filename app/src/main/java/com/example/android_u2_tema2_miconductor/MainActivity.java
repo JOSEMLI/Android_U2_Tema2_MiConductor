@@ -36,26 +36,28 @@ public class MainActivity  extends AppCompatActivity implements OnMapReadyCallba
   String idcli;
   LatLng pos;
   GoogleMap mapa;
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
     SupportMapFragment mapFragment = (SupportMapFragment)
-        getSupportFragmentManager().findFragmentById(R.id.mapa);
+            getSupportFragmentManager().findFragmentById(R.id.mapa);
     mapFragment.getMapAsync(this);
     mSocket = App.getSocket();
     mSocket.on("solicitudtaxi", solicitudtaxi);
     mSocket.connect();
 
   }
+
   @Override
   public void onMapReady(GoogleMap googleMap) {
     mapa = googleMap;
     pos = new LatLng(-18.011737, -70.253529);
-    mapa.moveCamera(CameraUpdateFactory.newLatLngZoom(pos,17));
+    mapa.moveCamera(CameraUpdateFactory.newLatLngZoom(pos, 17));
     if (ContextCompat.checkSelfPermission(this,
-        android.Manifest.permission.ACCESS_FINE_LOCATION) ==
-        PackageManager.PERMISSION_GRANTED) {
+            android.Manifest.permission.ACCESS_FINE_LOCATION) ==
+            PackageManager.PERMISSION_GRANTED) {
       mapa.setMyLocationEnabled(true);
       mapa.getUiSettings().setZoomControlsEnabled(false);
       mapa.getUiSettings().setCompassEnabled(true);
@@ -77,47 +79,52 @@ public class MainActivity  extends AppCompatActivity implements OnMapReadyCallba
           public void run() {
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
             builder.setMessage("Nueva solicitud de servicio desea aceptar")
-                .setTitle("SOLICITUD DE SERVICIO")
-                .setCancelable(true)
-                .setNeutralButton("Aceptar",
-                    new DialogInterface.OnClickListener() {
-                      public void onClick(DialogInterface dialog, int id) {
-                        mapa.addMarker(new MarkerOptions().position(new LatLng(latcli,loncli)).title("Ubicacion Cliente"));
-                        //se agrego cuando acepta
-                        JSONObject misdatos = new JSONObject();
-                        EditText miedt=findViewById(R.id.miedt);
-                        Button btnfinalizar=findViewById(R.id.btnfinalizar);
-                        btnfinalizar.setVisibility(View.VISIBLE);
-                        App.setidcliente(idcli);
-                        try {
-                          misdatos.put("datotaxi", miedt.getText());
-                          misdatos.put("id",idcli);
-                        } catch (JSONException e) {
-                          Log.e("JSONExceptionPresenter", e.toString());
-                        }
-                        mSocket.emit("accept", misdatos, new Ack() {
-                          @Override
-                          public void call(Object... args) {
-                            String res = (String) args[0];
-                            if (res.equals("OK")) Log.i("mimensaje", "Se envio correctamente");
-                            else Log.i("mimensaje", "Hubo error en el envio");
-                          }
-                        });
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                          startForegroundService(new Intent(MainActivity.this, ServicioLocalizacion.class));
-                        } else {
-                          startService(new Intent(MainActivity.this,
-                              ServicioLocalizacion.class));
-                        }
-                        //HASTA AQUI se modifico
+                    .setTitle("SOLICITUD DE SERVICIO")
+                    .setCancelable(true)
+                    .setNeutralButton("Aceptar",
+                            new DialogInterface.OnClickListener() {
+                              public void onClick(DialogInterface dialog, int id) {
+                                mapa.addMarker(new MarkerOptions().position(new LatLng(latcli, loncli)).title("Ubicacion Cliente"));
+                                //se agrego cuando acepta
+                                JSONObject misdatos = new JSONObject();
+                                EditText miedt = findViewById(R.id.miedt);
+                                Button btnfinalizar = findViewById(R.id.btnfinalizar);
+                                btnfinalizar.setVisibility(View.VISIBLE);
+                                Button btnclienteubi = findViewById(R.id.btnclienteubi);
+                                btnclienteubi.setVisibility(View.VISIBLE);
+                                Button btnm=findViewById(R.id.btnenviar);
+                                btnm.setVisibility(View.VISIBLE);
+                                App.setidcliente(idcli);
+                                try {
+                                  misdatos.put("datotaxi", miedt.getText());
+                                  misdatos.put("id", idcli);
+                                } catch (JSONException e) {
+                                  Log.e("JSONExceptionPresenter", e.toString());
+                                }
+                                mSocket.emit("accept", misdatos, new Ack() {
+                                  @Override
+                                  public void call(Object... args) {
+                                    String res = (String) args[0];
+                                    if (res.equals("OK"))
+                                      Log.i("mimensaje", "Se envio correctamente");
+                                    else Log.i("mimensaje", "Hubo error en el envio");
+                                  }
+                                });
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                  startForegroundService(new Intent(MainActivity.this, ServicioLocalizacion.class));
+                                } else {
+                                  startService(new Intent(MainActivity.this,
+                                          ServicioLocalizacion.class));
+                                }
+                                //HASTA AQUI se modifico
+                              }
+                            })
+                    .setNegativeButton("Rechazar", new DialogInterface.OnClickListener() {
+                      @Override
+                      public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.cancel();
                       }
-                    })
-                .setNegativeButton("Rechazar", new DialogInterface.OnClickListener() {
-                  @Override
-                  public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.cancel();
-                  }
-                });
+                    });
             AlertDialog alert = builder.create();
             alert.show();
           }
@@ -129,13 +136,13 @@ public class MainActivity  extends AppCompatActivity implements OnMapReadyCallba
   };
 
   public void mifinalizar(View view) {
-    Button btnfinalizar=findViewById(R.id.btnfinalizar);
+    Button btnfinalizar = findViewById(R.id.btnfinalizar);
     btnfinalizar.setVisibility(View.INVISIBLE);
     stopService(new Intent(MainActivity.this,
-        ServicioLocalizacion.class));
+            ServicioLocalizacion.class));
     JSONObject misdatos = new JSONObject();
     try {
-      misdatos.put("id",App.getidcliente());
+      misdatos.put("id", App.getidcliente());
     } catch (JSONException e) {
       Log.e("JSONExceptionPresenter", e.toString());
     }
@@ -149,4 +156,43 @@ public class MainActivity  extends AppCompatActivity implements OnMapReadyCallba
     });
   }
 
+  public void ubicacioncliente(View view) {
+    Button btncliubi = findViewById(R.id.btnclienteubi);
+    btncliubi.setVisibility(View.INVISIBLE);
+
+    JSONObject misdatos = new JSONObject();
+    try {
+      misdatos.put("id", App.getidcliente());
+    } catch (JSONException e) {
+      Log.e("JSONExceptionPresenter", e.toString());
+    }
+    mSocket.emit("mensajecliente", misdatos, new Ack() {
+      @Override
+      public void call(Object... args) {
+        String res = (String) args[0];
+        if (res.equals("OK")) Log.i("mensajecliente", "Mensaje enviado correctamente");
+        else Log.i("mimensaje", "Hubo error en el envio");
+      }
+    });
+  }
+
+  public void mimensaje(View view) {
+    Button btnm = findViewById(R.id.btnenviar);
+    btnm.setVisibility(View.INVISIBLE);
+    JSONObject misdatos = new JSONObject();
+    try {
+      misdatos.put("id", App.getidcliente());
+    } catch (JSONException e) {
+      Log.e("JSONExceptionPresenter", e.toString());
+    }
+    mSocket.emit("enviarmensaje", misdatos, new Ack() {
+      @Override
+      public void call(Object... args) {
+        String res = (String) args[0];
+        if (res.equals("OK")) Log.i("mimensaje", "Se envio correctamente");
+        else Log.i("mimensaje", "Hubo error en el envio");
+      }
+    });
+
+  }
 }

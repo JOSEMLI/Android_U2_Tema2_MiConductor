@@ -17,7 +17,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="10"
-        android:text="MI NOMBRE"
+        android:text="JUAN PAREDES"
         />
     <Button
         android:layout_width="match_parent"
@@ -26,4 +26,20 @@
         android:text="Finalizar"
         android:visibility="invisible"
         android:onClick="mifinalizar"/>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="10"
+        android:id="@+id/btnclienteubi"
+        android:text="Cliente"
+        android:visibility="invisible"
+        android:onClick="ubicacioncliente"/>
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/btnenviar"
+        android:text="enviar mensaje"
+        android:visibility="invisible"
+        android:onClick="mimensaje"/>
+
 </LinearLayout>
